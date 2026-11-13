@@ -26,3 +26,7 @@ A sample run is stored in [transaction-check.json](transaction-check.json). Its 
 ## Scope
 
 Real local CREATE2 deployment and real local PoolManager swaps are covered. No public-chain deployment was performed. These are functional tests and a source review; they do not constitute a professional security audit, economic proof or market-data backtest.
+
+## Independent source review
+
+A fresh reviewer examined every tracked non-vendor file at c7a35afcbea8e94893d95c31b664d206ecfef56d and independently reran formatting, build, all 30 tests, whitespace checks and a fresh Anvil transaction check. No substantiated correctness findings or publication blockers were reported. This review did not judge profitability, global novelty, professional-audit readiness, public-chain addresses or GitHub/CI outcomes.

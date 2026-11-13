@@ -1,7 +1,7 @@
 # Headroom — Dynamic Fees quest design
 
 Date: 2026-11-13.
-Status: approved for implementation by the user; implemented and under final verification.
+Status: approved for implementation by the user; implemented and independently reviewed; local verification passed.
 Research: [project research](../../research.md).
 
 ## Intent
