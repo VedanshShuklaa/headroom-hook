@@ -1,8 +1,8 @@
 # Headroom — Dynamic Fees quest design
 
 Date: 2026-11-13.
-Status: proposed; implementation has not started.
-Research: [workspace RESEARCH.md](../../../../RESEARCH.md).
+Status: approved for implementation by the user; implemented and under final verification.
+Research: [project research](../../research.md).
 
 ## Intent
 

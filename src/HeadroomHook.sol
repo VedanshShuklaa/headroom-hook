@@ -84,6 +84,8 @@ contract HeadroomHook is BaseHook {
         if (reduction > BASE_FEE - MIN_FEE) reduction = BASE_FEE - MIN_FEE;
         if (reduction == 0) return (fee, 0, remaining);
 
+        // Safe: reduction was capped to BASE_FEE - MIN_FEE = 2500 above.
+        // forge-lint: disable-next-line(unsafe-typecast)
         fee -= uint24(reduction);
         // Round reservations up, so fractional wei cannot create extra allowance.
         reservation = FullMath.mulDivRoundingUp(amount, reduction, FEE_DENOMINATOR);

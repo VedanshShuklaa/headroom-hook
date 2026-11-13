@@ -3,7 +3,6 @@ pragma solidity ^0.8.26;
 
 import {Deployers} from "@uniswap/v4-core/test/utils/Deployers.sol";
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
-import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {SwapParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
@@ -16,6 +15,8 @@ import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {console2} from "forge-std/console2.sol";
 import {HeadroomHook} from "../src/HeadroomHook.sol";
+
+import {HeadroomSalt} from "../script/DeployHeadroom.s.sol";
 
 contract HeadroomHookTest is Deployers {
     HeadroomHook hook;
@@ -272,6 +273,8 @@ contract HeadroomHookTest is Deployers {
         uint256 amount = bound(uint256(amountSeed), 1, 1e26);
         vm.fee(uint256(gasSeed));
         uint256 budget = hook.initialAllowance();
+        // amount is bounded to 1e26, far below int256.max.
+        // forge-lint: disable-next-line(unsafe-typecast)
         (uint24 fee, uint256 reserve, uint256 left) = hook.quote(key, params(true, -int256(amount)));
         assertGe(fee, 500);
         assertLe(fee, 3000);
@@ -280,6 +283,8 @@ contract HeadroomHookTest is Deployers {
         uint256 nominal = amount * (3000 - fee);
         assertGe(reserve * 1_000_000, nominal);
         assertLt(reserve * 1_000_000 - nominal, 1_000_000);
+        // amount + 1 remains below int256.max.
+        // forge-lint: disable-next-line(unsafe-typecast)
         (uint24 biggerFee,,) = hook.quote(key, params(true, -int256(amount + 1)));
         assertGe(biggerFee, fee);
     }
@@ -288,6 +293,8 @@ contract HeadroomHookTest is Deployers {
         uint256 amount = bound(uint256(seed), 1e12, 2 ether);
         uint256 previous = hook.initialAllowance();
         for (uint256 i; i < 12; ++i) {
+            // amount is bounded to 2 ether.
+            // forge-lint: disable-next-line(unsafe-typecast)
             swap(key, true, -int256(amount), "");
             uint256 left = hook.remainingAllowance();
             assertLe(left, previous);
@@ -312,5 +319,19 @@ contract HeadroomHookTest is Deployers {
         console2.log("Next 1 ETH swap fee (millionths):", applied(key, true, -1 ether));
         console2.log("After exhaustion (millionths):", applied(key, true, -1 ether));
         assertEq(hook.remainingAllowance(), 0);
+    }
+
+    function testCreate2DeploymentHasValidPermissionsAndCanSwap() public {
+        bytes32 hash = keccak256(
+            abi.encodePacked(type(HeadroomHook).creationCode, abi.encode(manager, Currency.unwrap(currency0)))
+        );
+        (bytes32 salt, address predicted) = HeadroomSalt.find(address(this), hash);
+        HeadroomHook deployed = new HeadroomHook{salt: salt}(manager, Currency.unwrap(currency0));
+        assertEq(address(deployed), predicted);
+        assertEq(uint160(address(deployed)) & Hooks.ALL_HOOK_MASK, Hooks.AFTER_INITIALIZE_FLAG | Hooks.BEFORE_SWAP_FLAG);
+        (PoolKey memory realPool,) = initPoolAndAddLiquidity(
+            currency0, currency1, IHooks(predicted), LPFeeLibrary.DYNAMIC_FEE_FLAG, SQRT_PRICE_1_1
+        );
+        assertEq(applied(realPool, true, -1 ether), 1000);
     }
 }

@@ -6,3 +6,8 @@
 - Task 1 GREEN: 29 tests passed, including three fuzz tests with 256 runs (Foundry can replay cached cases).
 - Test harness corrections: Foundry 1.5 reserves the testFail prefix and restricts vm.fee to uint64; test names and gas fixtures were adjusted. No production workaround was needed.
 - Reservations round up against requested gross input, including partial and zero fills; reverted settlement restores prior transient state.
+
+- Task 2 RED: the real CREATE2 test rejected an unmined address with HookAddressNotValid.
+- Task 2 GREEN: valid CREATE2 deployment and pool swap passed; the full suite has 30 tests.
+- Anvil acceptance: two distinct transactions in block 3 each produced [1000, 3000] LP fees and reserved 0.002 ETH; a zero-basefee transaction produced [3000, 3000].
+- The RPC method was corrected to documented anvil_setNextBlockBaseFeePerGas after an explicit Method not found response.
